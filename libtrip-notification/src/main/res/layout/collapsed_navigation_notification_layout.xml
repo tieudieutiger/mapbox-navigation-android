@@ -63,10 +63,10 @@
 
     <TextView
         android:id="@+id/freeDriveText"
+        style="@style/NotificationTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@id/maneuverImage"
-        android:layout_marginTop="4dp"
+        android:layout_centerVertical="true"
         android:layout_toEndOf="@id/maneuverImage"
         android:layout_toRightOf="@id/maneuverImage"
         android:lines="1"
