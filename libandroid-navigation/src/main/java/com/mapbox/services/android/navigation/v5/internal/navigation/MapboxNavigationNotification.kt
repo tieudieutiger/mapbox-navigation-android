@@ -57,8 +57,7 @@ internal class MapboxNavigationNotification : NavigationNotification {
 
     private var notificationManager: NotificationManager? = null
     private lateinit var notification: Notification
-    private var collapsedNotificationRemoteViews: RemoteViews? = null
-    private var expandedNotificationRemoteViews: RemoteViews? = null
+    private var notificationRemoteViews: RemoteViews? = null
     private lateinit var mapboxNavigation: MapboxNavigation
     private var currentDistanceText: SpannableString? = null
     private var distanceFormatter: DistanceFormatter? = null
@@ -204,8 +203,7 @@ internal class MapboxNavigationNotification : NavigationNotification {
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setSmallIcon(R.drawable.ic_navigation)
-            .setCustomContentView(collapsedNotificationRemoteViews)
-            .setCustomBigContentView(expandedNotificationRemoteViews)
+            .setCustomContentView(notificationRemoteViews)
             .setOngoing(true)
 
         pendingOpenIntent?.let { pendingOpenIntent ->
@@ -218,19 +216,19 @@ internal class MapboxNavigationNotification : NavigationNotification {
         val colorResId = mapboxNavigation.options().defaultNotificationColorId()
         val backgroundColor = ContextCompat.getColor(applicationContext, colorResId)
 
-        val collapsedLayout = R.layout.collapsed_navigation_notification_layout
-        val collapsedLayoutId = R.id.navigationCollapsedNotificationLayout
-        RemoteViews(applicationContext.packageName, collapsedLayout).also { remoteViews ->
-            collapsedNotificationRemoteViews = remoteViews
-            remoteViews.setInt(collapsedLayoutId, SET_BACKGROUND_COLOR, backgroundColor)
-        }
-
-        val expandedLayout = R.layout.expanded_navigation_notification_layout
-        val expandedLayoutId = R.id.navigationExpandedNotificationLayout
-        RemoteViews(applicationContext.packageName, expandedLayout).also { remoteViews ->
-            expandedNotificationRemoteViews = remoteViews
+        val navigationNotificationLayout = R.layout.navigation_notification_layout
+        val navigationNotificationLayoutId = R.id.navigationNotificationLayout
+        RemoteViews(
+            applicationContext.packageName,
+            navigationNotificationLayout
+        ).also { remoteViews ->
+            notificationRemoteViews = remoteViews
             remoteViews.setOnClickPendingIntent(R.id.endNavigationBtn, pendingCloseIntent)
-            remoteViews.setInt(expandedLayoutId, SET_BACKGROUND_COLOR, backgroundColor)
+            remoteViews.setInt(
+                navigationNotificationLayoutId,
+                SET_BACKGROUND_COLOR,
+                backgroundColor
+            )
         }
     }
 
@@ -274,8 +272,7 @@ internal class MapboxNavigationNotification : NavigationNotification {
     }
 
     private fun updateViewsWithInstruction(text: String?) {
-        collapsedNotificationRemoteViews?.setTextViewText(R.id.notificationInstructionText, text)
-        expandedNotificationRemoteViews?.setTextViewText(R.id.notificationInstructionText, text)
+        notificationRemoteViews?.setTextViewText(R.id.notificationInstructionText, text)
     }
 
     private fun newInstructionText(bannerInstruction: BannerInstructions): Boolean {
@@ -292,11 +289,7 @@ internal class MapboxNavigationNotification : NavigationNotification {
                     distanceFormatter.formatDistance(it)
                 }
             }
-            collapsedNotificationRemoteViews?.setTextViewText(
-                R.id.notificationDistanceText,
-                currentDistanceText.toString()
-            )
-            expandedNotificationRemoteViews?.setTextViewText(
+            notificationRemoteViews?.setTextViewText(
                 R.id.notificationDistanceText,
                 currentDistanceText.toString()
             )
@@ -322,8 +315,7 @@ internal class MapboxNavigationNotification : NavigationNotification {
         } ?: false
 
     private fun updateViewsWithArrival(time: String) {
-        collapsedNotificationRemoteViews?.setTextViewText(R.id.notificationArrivalText, time)
-        expandedNotificationRemoteViews?.setTextViewText(R.id.notificationArrivalText, time)
+        notificationRemoteViews?.setTextViewText(R.id.notificationArrivalText, time)
     }
 
     private fun updateManeuverImage(drivingSide: String) {
@@ -331,8 +323,7 @@ internal class MapboxNavigationNotification : NavigationNotification {
             currentManeuverType ?: "",
             currentManeuverModifier, drivingSide, currentRoundaboutAngle
         ).let { bitmap ->
-            collapsedNotificationRemoteViews?.setImageViewBitmap(R.id.maneuverImage, bitmap)
-            expandedNotificationRemoteViews?.setImageViewBitmap(R.id.maneuverImage, bitmap)
+            notificationRemoteViews?.setImageViewBitmap(R.id.maneuverImage, bitmap)
         }
     }
 

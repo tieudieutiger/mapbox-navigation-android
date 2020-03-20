@@ -45,10 +45,10 @@ import com.mapbox.navigation.utils.NOTIFICATION_ID
 import com.mapbox.navigation.utils.SET_BACKGROUND_COLOR
 import com.mapbox.navigation.utils.extensions.ifNonNull
 import com.mapbox.navigation.utils.thread.ifChannelException
-import java.util.Calendar
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.channels.ClosedSendChannelException
+import java.util.Calendar
 
 /**
  * Default implementation of [TripNotification] interface
@@ -75,8 +75,7 @@ class MapboxTripNotification constructor(
 
     private var currentInstructionText: String? = null
     private var currentDistanceText: SpannableString? = null
-    private var collapsedNotificationRemoteViews: RemoteViews? = null
-    private var expandedNotificationRemoteViews: RemoteViews? = null
+    private var notificationRemoteViews: RemoteViews? = null
     private var pendingOpenIntent: PendingIntent? = null
     private var pendingCloseIntent: PendingIntent? = null
     private val etaFormat: String = applicationContext.getString(R.string.eta_format)
@@ -127,13 +126,7 @@ class MapboxTripNotification constructor(
         currentInstructionText = null
         currentDistanceText = null
 
-        collapsedNotificationRemoteViews?.apply {
-            setTextViewText(R.id.notificationDistanceText, "")
-            setTextViewText(R.id.notificationArrivalText, "")
-            setTextViewText(R.id.notificationInstructionText, "")
-        }
-
-        expandedNotificationRemoteViews?.apply {
+        notificationRemoteViews?.apply {
             setTextViewText(R.id.notificationDistanceText, "")
             setTextViewText(R.id.notificationArrivalText, "")
             setTextViewText(R.id.notificationInstructionText, "")
@@ -168,8 +161,7 @@ class MapboxTripNotification constructor(
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setSmallIcon(R.drawable.ic_navigation)
-                .setCustomContentView(collapsedNotificationRemoteViews)
-                .setCustomBigContentView(expandedNotificationRemoteViews)
+                .setCustomContentView(notificationRemoteViews)
                 .setOngoing(true)
 
         pendingOpenIntent?.let { pendingOpenIntent ->
@@ -185,29 +177,13 @@ class MapboxTripNotification constructor(
         val backgroundColor =
             ContextCompat.getColor(applicationContext, R.color.mapboxNotificationBlue)
 
-        buildCollapsedViews(backgroundColor)
-        buildExpandedViews(backgroundColor)
-    }
-
-    private fun buildCollapsedViews(backgroundColor: Int) {
-        val collapsedLayout = R.layout.collapsed_navigation_notification_layout
-        val collapsedLayoutId = R.id.navigationCollapsedNotificationLayout
-
-        RemoteViewsProvider.createRemoteViews(applicationContext.packageName, collapsedLayout)
+        val navigationNotificationLayout = R.layout.navigation_notification_layout
+        val navigationNotificationLayoutId = R.id.navigationNotificationLayout
+        RemoteViewsProvider.createRemoteViews(applicationContext.packageName, navigationNotificationLayout)
             .also { remoteViews ->
-                collapsedNotificationRemoteViews = remoteViews
-                remoteViews.setInt(collapsedLayoutId, SET_BACKGROUND_COLOR, backgroundColor)
-            }
-    }
-
-    private fun buildExpandedViews(backgroundColor: Int) {
-        val expandedLayout = R.layout.expanded_navigation_notification_layout
-        val expandedLayoutId = R.id.navigationExpandedNotificationLayout
-        RemoteViewsProvider.createRemoteViews(applicationContext.packageName, expandedLayout)
-            .also { remoteViews ->
-                expandedNotificationRemoteViews = remoteViews
+                notificationRemoteViews = remoteViews
                 remoteViews.setOnClickPendingIntent(R.id.endNavigationBtn, pendingCloseIntent)
-                remoteViews.setInt(expandedLayoutId, SET_BACKGROUND_COLOR, backgroundColor)
+                remoteViews.setInt(navigationNotificationLayoutId, SET_BACKGROUND_COLOR, backgroundColor)
             }
     }
 
@@ -276,40 +252,28 @@ class MapboxTripNotification constructor(
     }
 
     private fun updateEtaContentVisibility(isFreeDriveMode: Boolean) {
-        collapsedNotificationRemoteViews?.setViewVisibility(
-            R.id.etaContent,
-            if (isFreeDriveMode) GONE else VISIBLE
-        )
-        expandedNotificationRemoteViews?.setViewVisibility(
+        notificationRemoteViews?.setViewVisibility(
             R.id.etaContent,
             if (isFreeDriveMode) GONE else VISIBLE
         )
     }
 
     private fun updateInstructionTextVisibility(isFreeDriveMode: Boolean) {
-        collapsedNotificationRemoteViews?.setViewVisibility(
-            R.id.notificationInstructionText,
-            if (isFreeDriveMode) GONE else VISIBLE
-        )
-        expandedNotificationRemoteViews?.setViewVisibility(
+        notificationRemoteViews?.setViewVisibility(
             R.id.notificationInstructionText,
             if (isFreeDriveMode) GONE else VISIBLE
         )
     }
 
     private fun updateFreeDriveTextVisibility(isFreeDriveMode: Boolean) {
-        collapsedNotificationRemoteViews?.setViewVisibility(
-            R.id.freeDriveText,
-            if (isFreeDriveMode) VISIBLE else GONE
-        )
-        expandedNotificationRemoteViews?.setViewVisibility(
+        notificationRemoteViews?.setViewVisibility(
             R.id.freeDriveText,
             if (isFreeDriveMode) VISIBLE else GONE
         )
     }
 
     private fun updateEndNavigationBtnText(isFreeDriveMode: Boolean) {
-        expandedNotificationRemoteViews?.setTextViewText(
+        notificationRemoteViews?.setTextViewText(
             R.id.endNavigationBtnText,
             applicationContext.getString(if (isFreeDriveMode) R.string.stop_session else R.string.end_navigation)
         )
@@ -317,11 +281,7 @@ class MapboxTripNotification constructor(
 
     private fun updateManeuverImageResource(isFreeDriveMode: Boolean) {
         if (isFreeDriveMode) {
-            collapsedNotificationRemoteViews?.setImageViewResource(
-                R.id.maneuverImage,
-                R.drawable.ic_navigation
-            )
-            expandedNotificationRemoteViews?.setImageViewResource(
+            notificationRemoteViews?.setImageViewResource(
                 R.id.maneuverImage,
                 R.drawable.ic_navigation
             )
@@ -332,11 +292,7 @@ class MapboxTripNotification constructor(
         bannerInstruction?.let { bannerIns ->
             val primaryText = bannerIns.primary().text()
             if (currentInstructionText.isNullOrEmpty() || currentInstructionText != primaryText) {
-                collapsedNotificationRemoteViews?.setTextViewText(
-                    R.id.notificationInstructionText,
-                    primaryText
-                )
-                expandedNotificationRemoteViews?.setTextViewText(
+                notificationRemoteViews?.setTextViewText(
                     R.id.notificationInstructionText,
                     primaryText
                 )
@@ -355,11 +311,7 @@ class MapboxTripNotification constructor(
                     distanceFormatter.formatDistance(it.toDouble())
                 }
             }
-            collapsedNotificationRemoteViews?.setTextViewText(
-                R.id.notificationDistanceText,
-                currentDistanceText.toString()
-            )
-            expandedNotificationRemoteViews?.setTextViewText(
+            notificationRemoteViews?.setTextViewText(
                 R.id.notificationDistanceText,
                 currentDistanceText.toString()
             )
@@ -383,8 +335,7 @@ class MapboxTripNotification constructor(
         }
 
     private fun updateViewsWithArrival(time: String) {
-        collapsedNotificationRemoteViews?.setTextViewText(R.id.notificationArrivalText, time)
-        expandedNotificationRemoteViews?.setTextViewText(R.id.notificationArrivalText, time)
+        notificationRemoteViews?.setTextViewText(R.id.notificationArrivalText, time)
     }
 
     private fun updateCurrentManeuverToDefault(isFreeDriveMode: Boolean) {
@@ -418,8 +369,7 @@ class MapboxTripNotification constructor(
             currentManeuverType ?: "",
             currentManeuverModifier, drivingSide, currentRoundaboutAngle
         )?.let { bitmap ->
-            collapsedNotificationRemoteViews?.setImageViewBitmap(R.id.maneuverImage, bitmap)
-            expandedNotificationRemoteViews?.setImageViewBitmap(R.id.maneuverImage, bitmap)
+            notificationRemoteViews?.setImageViewBitmap(R.id.maneuverImage, bitmap)
         }
     }
 

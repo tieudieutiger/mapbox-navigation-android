@@ -45,8 +45,7 @@ class MapboxTripNotificationTest {
 
     private lateinit var notification: MapboxTripNotification
     private lateinit var mockedContext: Context
-    private lateinit var collapsedViews: RemoteViews
-    private lateinit var expandedViews: RemoteViews
+    private lateinit var notificationViews: RemoteViews
     private val navigationOptions: NavigationOptions = mockk(relaxed = true)
     private val distanceSpannable: SpannableString = mockk()
     private val distanceFormatter: DistanceFormatter
@@ -72,20 +71,13 @@ class MapboxTripNotificationTest {
 
     private fun mockRemoteViews() {
         mockkObject(RemoteViewsProvider)
-        collapsedViews = mockk(relaxUnitFun = true)
-        expandedViews = mockk(relaxUnitFun = true)
+        notificationViews = mockk(relaxUnitFun = true)
         every {
             RemoteViewsProvider.createRemoteViews(
                 any(),
-                R.layout.collapsed_navigation_notification_layout
+                R.layout.navigation_notification_layout
             )
-        } returns collapsedViews
-        every {
-            RemoteViewsProvider.createRemoteViews(
-                any(),
-                R.layout.expanded_navigation_notification_layout
-            )
-        } returns expandedViews
+        } returns notificationViews
     }
 
     @Test
@@ -183,10 +175,9 @@ class MapboxTripNotificationTest {
         notification.updateNotification(routeProgress)
 
         verify(exactly = 1) { bannerText.text() }
-        verify(exactly = 1) { collapsedViews.setTextViewText(any(), primaryText()) }
-        verify(exactly = 1) { expandedViews.setTextViewText(any(), primaryText()) }
-        verify(exactly = 1) { expandedViews.setTextViewText(any(), END_NAVIGATION) }
-        verify(exactly = 0) { expandedViews.setTextViewText(any(), STOP_SESSION) }
+        verify(exactly = 1) { notificationViews.setTextViewText(any(), primaryText()) }
+        verify(exactly = 1) { notificationViews.setTextViewText(any(), END_NAVIGATION) }
+        verify(exactly = 0) { notificationViews.setTextViewText(any(), STOP_SESSION) }
         assertEquals(notification.currentManeuverType, MANEUVER_TYPE)
         assertEquals(notification.currentManeuverModifier, MANEUVER_MODIFIER)
     }
@@ -197,18 +188,11 @@ class MapboxTripNotificationTest {
         val distance = 30f
         val duration = 112L
         mockLegProgress(routeProgress, distance, duration)
-        val distanceSlot1 = slot<SpannableString>()
-        val distanceSlot2 = slot<SpannableString>()
-        every { collapsedViews.setTextViewText(any(), capture(distanceSlot1)) } just Runs
-        every { expandedViews.setTextViewText(any(), capture(distanceSlot2)) } just Runs
         mockUpdateNotificationAndroidInteractions()
 
         notification.updateNotification(routeProgress)
 
-        verify(exactly = 1) { collapsedViews.setTextViewText(any(), distanceSpannable) }
-        verify(exactly = 1) { expandedViews.setTextViewText(any(), distanceSpannable) }
-        assertEquals(distanceSpannable, distanceSlot1.captured)
-        assertEquals(distanceSpannable, distanceSlot2.captured)
+        verify(exactly = 1) { notificationViews.setTextViewText(any(), distanceSpannable.toString()) }
     }
 
     @Test
@@ -224,8 +208,7 @@ class MapboxTripNotificationTest {
 
         notification.updateNotification(routeProgress)
 
-        verify(exactly = 1) { collapsedViews.setTextViewText(any(), result) }
-        verify(exactly = 1) { expandedViews.setTextViewText(any(), result) }
+        verify(exactly = 1) { notificationViews.setTextViewText(any(), result) }
     }
 
     @Test
@@ -238,14 +221,12 @@ class MapboxTripNotificationTest {
         notification.updateNotification(routeProgress)
 
         verify(exactly = 1) { bannerText.text() }
-        verify(exactly = 1) { collapsedViews.setTextViewText(any(), primaryText()) }
-        verify(exactly = 1) { expandedViews.setTextViewText(any(), primaryText()) }
+        verify(exactly = 1) { notificationViews.setTextViewText(any(), primaryText()) }
 
         notification.updateNotification(routeProgress)
 
         verify(exactly = 2) { bannerText.text() }
-        verify(exactly = 1) { collapsedViews.setTextViewText(any(), primaryText()) }
-        verify(exactly = 1) { expandedViews.setTextViewText(any(), primaryText()) }
+        verify(exactly = 1) { notificationViews.setTextViewText(any(), primaryText()) }
         assertEquals(notification.currentManeuverType, MANEUVER_TYPE)
         assertEquals(notification.currentManeuverModifier, MANEUVER_MODIFIER)
     }
@@ -265,10 +246,8 @@ class MapboxTripNotificationTest {
         notification.updateNotification(routeProgress)
 
         verify(exactly = 2) { bannerText.text() }
-        verify(exactly = 1) { collapsedViews.setTextViewText(any(), initialPrimaryText) }
-        verify(exactly = 1) { expandedViews.setTextViewText(any(), initialPrimaryText) }
-        verify(exactly = 1) { collapsedViews.setTextViewText(any(), changedPrimaryText) }
-        verify(exactly = 1) { expandedViews.setTextViewText(any(), changedPrimaryText) }
+        verify(exactly = 1) { notificationViews.setTextViewText(any(), initialPrimaryText) }
+        verify(exactly = 1) { notificationViews.setTextViewText(any(), changedPrimaryText) }
         assertEquals(notification.currentManeuverType, MANEUVER_TYPE)
         assertEquals(notification.currentManeuverModifier, MANEUVER_MODIFIER)
     }
@@ -286,16 +265,14 @@ class MapboxTripNotificationTest {
         notification.onTripSessionStarted()
 
         verify(exactly = 1) { bannerText.text() }
-        verify(exactly = 1) { collapsedViews.setTextViewText(any(), primaryText()) }
-        verify(exactly = 1) { expandedViews.setTextViewText(any(), primaryText()) }
+        verify(exactly = 1) { notificationViews.setTextViewText(any(), primaryText()) }
         assertNull(notification.currentManeuverType)
         assertNull(notification.currentManeuverModifier)
 
         notification.updateNotification(routeProgress)
 
         verify(exactly = 2) { bannerText.text() }
-        verify(exactly = 2) { collapsedViews.setTextViewText(any(), primaryText()) }
-        verify(exactly = 2) { expandedViews.setTextViewText(any(), primaryText()) }
+        verify(exactly = 2) { notificationViews.setTextViewText(any(), primaryText()) }
         assertEquals(notification.currentManeuverType, MANEUVER_TYPE)
         assertEquals(notification.currentManeuverModifier, MANEUVER_MODIFIER)
     }
@@ -311,8 +288,7 @@ class MapboxTripNotificationTest {
         notification.updateNotification(routeProgress)
 
         verify(exactly = 1) { bannerText.text() }
-        verify(exactly = 1) { collapsedViews.setTextViewText(any(), primaryText()) }
-        verify(exactly = 1) { expandedViews.setTextViewText(any(), primaryText()) }
+        verify(exactly = 1) { notificationViews.setTextViewText(any(), primaryText()) }
         assertEquals(notification.currentManeuverType, MANEUVER_TYPE)
         assertEquals(notification.currentManeuverModifier, MANEUVER_MODIFIER)
 
@@ -320,14 +296,12 @@ class MapboxTripNotificationTest {
         notification.onTripSessionStarted()
 
         verify(exactly = 1) { bannerText.text() }
-        verify(exactly = 1) { collapsedViews.setTextViewText(any(), primaryText()) }
-        verify(exactly = 1) { expandedViews.setTextViewText(any(), primaryText()) }
+        verify(exactly = 1) { notificationViews.setTextViewText(any(), primaryText()) }
 
         notification.onTripSessionStopped()
 
         verify(exactly = 1) { bannerText.text() }
-        verify(exactly = 1) { collapsedViews.setTextViewText(any(), primaryText()) }
-        verify(exactly = 1) { expandedViews.setTextViewText(any(), primaryText()) }
+        verify(exactly = 1) { notificationViews.setTextViewText(any(), primaryText()) }
         assertNull(notification.currentManeuverType)
         assertNull(notification.currentManeuverModifier)
     }
@@ -341,8 +315,8 @@ class MapboxTripNotificationTest {
         notification.onTripSessionStarted()
         notification.updateNotification(routeProgress)
 
-        verify(exactly = 0) { expandedViews.setTextViewText(any(), END_NAVIGATION) }
-        verify(exactly = 1) { expandedViews.setTextViewText(any(), STOP_SESSION) }
+        verify(exactly = 0) { notificationViews.setTextViewText(any(), END_NAVIGATION) }
+        verify(exactly = 1) { notificationViews.setTextViewText(any(), STOP_SESSION) }
     }
 
     private fun mockUpdateNotificationAndroidInteractions() {
