@@ -357,11 +357,11 @@ class MapboxTripNotification constructor(
             }
             collapsedNotificationRemoteViews?.setTextViewText(
                 R.id.notificationDistanceText,
-                currentDistanceText
+                currentDistanceText.toString()
             )
             expandedNotificationRemoteViews?.setTextViewText(
                 R.id.notificationDistanceText,
-                currentDistanceText
+                currentDistanceText.toString()
             )
         }
     }
