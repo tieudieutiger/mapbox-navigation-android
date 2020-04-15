@@ -644,6 +644,10 @@ constructor(
         tripSession.useExtendedKalmanFilter(useEKF)
     }
 
+    fun toggleElectronicHorizon(isEnabled: Boolean) {
+        MapboxNativeNavigatorImpl.toggleElectronicHorizon(isEnabled)
+    }
+
     companion object {
 
         /**

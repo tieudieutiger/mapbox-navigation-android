@@ -299,6 +299,7 @@ class SimpleMapboxNavigationKt : AppCompatActivity(), OnMapReadyCallback,
     private val routeProgressObserver = object : RouteProgressObserver {
         override fun onRouteProgressChanged(routeProgress: RouteProgress) {
             Timber.d("route progress %s", routeProgress.toString())
+            Timber.d("PGS eHorizon %s", routeProgress.eHorizon()?.routes()?.get(0)?.toJson())
             if (routeProgress.route() != null) {
                 navigationMapboxMap.onNewRouteProgress(routeProgress)
             }
@@ -369,10 +370,12 @@ class SimpleMapboxNavigationKt : AppCompatActivity(), OnMapReadyCallback,
             when (tripSessionState) {
                 TripSessionState.STARTED -> {
                     stopLocationUpdates()
+                    mapboxNavigation.toggleElectronicHorizon(true)
                     startNavigation.visibility = GONE
                 }
                 TripSessionState.STOPPED -> {
                     startLocationUpdates()
+                    mapboxNavigation.toggleElectronicHorizon(false)
                     startNavigation.visibility = VISIBLE
                 }
             }

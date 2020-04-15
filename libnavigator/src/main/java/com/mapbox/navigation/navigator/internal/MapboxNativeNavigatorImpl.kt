@@ -4,6 +4,7 @@ import android.location.Location
 import com.mapbox.api.directions.v5.models.BannerComponents
 import com.mapbox.api.directions.v5.models.BannerInstructions
 import com.mapbox.api.directions.v5.models.BannerText
+import com.mapbox.api.directions.v5.models.DirectionsResponse
 import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.api.directions.v5.models.LegStep
 import com.mapbox.api.directions.v5.models.RouteLeg
@@ -205,6 +206,13 @@ object MapboxNativeNavigatorImpl : MapboxNativeNavigator {
     override fun getElectronicHorizon(request: String): RouterResult =
         navigator.getElectronicHorizon(request)
 
+    override fun toggleElectronicHorizon(isEnabled: Boolean) {
+        when (isEnabled) {
+            true -> navigator.enableElectronicHorizon()
+            false -> navigator.disableElectronicHorizon()
+        }
+    }
+
     // Offline
 
     /**
@@ -338,6 +346,12 @@ object MapboxNativeNavigatorImpl : MapboxNativeNavigator {
         val routeProgressBuilder = RouteProgress.Builder()
         val legProgressBuilder = RouteLegProgress.Builder()
         val stepProgressBuilder = RouteStepProgress.Builder()
+
+        val eHorizon = electronicHorizon
+        eHorizon.horizon?.let {
+            val eHorizonRoute = DirectionsResponse.fromJson(it)
+            routeProgressBuilder.eHorizon(eHorizonRoute)
+        }
 
         ifNonNull(route?.legs()) { legs ->
             var currentLeg: RouteLeg? = null

@@ -143,6 +143,8 @@ interface MapboxNativeNavigator {
      */
     fun getElectronicHorizon(request: String): RouterResult
 
+    fun toggleElectronicHorizon(isEnabled: Boolean)
+
     // Offline
     /**
      * Caches tiles around the last set route
