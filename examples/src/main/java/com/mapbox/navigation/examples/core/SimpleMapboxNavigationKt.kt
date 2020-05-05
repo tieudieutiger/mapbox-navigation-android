@@ -75,8 +75,7 @@ import timber.log.Timber
 class SimpleMapboxNavigationKt : AppCompatActivity(), OnMapReadyCallback,
     VoiceInstructionsObserver {
 
-    private val VOICE_INSTRUCTION_CACHE =
-        "voice-instruction-cache"
+    private val VOICE_INSTRUCTION_CACHE = "voice-instruction-cache"
     private val startTimeInMillis = 5000L
     private val countdownInterval = 10L
     private val maxProgress = startTimeInMillis / countdownInterval
@@ -346,7 +345,7 @@ class SimpleMapboxNavigationKt : AppCompatActivity(), OnMapReadyCallback,
             isAlternativeFaster: Boolean
         ) {
             if (isAlternativeFaster) {
-                this@SimpleMapboxNavigationKt.fasterRoute = fasterRoute
+                this@SimpleMapboxNavigationKt.fasterRoute = currentRoute
                 fasterRouteSelectionTimer.start()
                 bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
             }
