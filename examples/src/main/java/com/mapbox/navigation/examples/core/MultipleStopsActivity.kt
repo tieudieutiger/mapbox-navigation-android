@@ -64,7 +64,6 @@ class MultipleStopsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         mapboxNavigation = MapboxNavigation(
             applicationContext,
-            Utils.getMapboxAccessToken(this),
             mapboxNavigationOptions,
             locationEngine = replayRouteLocationEngine
         ).apply {
