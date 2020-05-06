@@ -33,7 +33,7 @@ class ReplayHistoryLocationEngine(
 
     init {
         myId = instances
-        replayHistoryPlayer.observeReplayEvents { recordUpdate ->
+        replayHistoryPlayer.registerObserver { recordUpdate ->
             replayEvents(recordUpdate)
         }
     }

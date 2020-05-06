@@ -144,7 +144,7 @@ class ReplayHistoryActivity : AppCompatActivity() {
             true
         }
 
-        replayHistoryPlayer.observeReplayEvents {
+        replayHistoryPlayer.registerObserver {
             it.forEach { event ->
                 when (event) {
                     is ReplayEventInitialRoute -> {
@@ -157,7 +157,7 @@ class ReplayHistoryActivity : AppCompatActivity() {
         }
 
         playReplay.setOnClickListener {
-            replayHistoryPlayer.play(this@ReplayHistoryActivity)
+            replayHistoryPlayer.play()
         }
     }
 

@@ -1,8 +1,6 @@
 package com.mapbox.navigation.core.replay.history
 
 import android.os.SystemClock
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
 import com.mapbox.base.common.logger.Logger
 import com.mapbox.navigation.testing.MainCoroutineRule
 import io.mockk.Called
@@ -28,11 +26,6 @@ class ReplayHistoryPlayerTest {
     @get:Rule
     val coroutineRule = MainCoroutineRule()
 
-    private val lifecycleOwner: LifecycleOwner = mockk {
-        every { lifecycle } returns mockk {
-            every { currentState } returns Lifecycle.State.STARTED
-        }
-    }
     private val mockLambda: (List<ReplayEventBase>) -> Unit = mockk(relaxed = true)
     private val logger: Logger = mockk(relaxUnitFun = true)
 
@@ -55,9 +48,9 @@ class ReplayHistoryPlayerTest {
                         speed = 0.5585000514984131)
                 )
             ))
-        replayHistoryPlayer.observeReplayEvents(mockLambda)
+        replayHistoryPlayer.registerObserver(mockLambda)
 
-        val job = replayHistoryPlayer.play(lifecycleOwner)
+        val job = replayHistoryPlayer.play()
         advanceTimeMillis(5000)
         replayHistoryPlayer.finish()
         job.cancelAndJoin()
@@ -105,9 +98,9 @@ class ReplayHistoryPlayerTest {
                         accuracyHorizontal = 3.9000000953674318,
                         provider = "fused"))
             ))
-        replayHistoryPlayer.observeReplayEvents(mockLambda)
+        replayHistoryPlayer.registerObserver(mockLambda)
 
-        val job = replayHistoryPlayer.play(lifecycleOwner)
+        val job = replayHistoryPlayer.play()
         advanceTimeMillis(3000)
         replayHistoryPlayer.finish()
         job.cancelAndJoin()
@@ -127,11 +120,11 @@ class ReplayHistoryPlayerTest {
         val replayHistoryPlayer = ReplayHistoryPlayer(logger)
             .pushEvents(testEvents)
         val timeCapture = mutableListOf<Pair<ReplayEventBase, Long>>()
-        replayHistoryPlayer.observeReplayEvents { replayEvents ->
+        replayHistoryPlayer.registerObserver { replayEvents ->
             replayEvents.forEach { timeCapture.add(Pair(it, currentTime)) }
         }
 
-        val job = replayHistoryPlayer.play(lifecycleOwner)
+        val job = replayHistoryPlayer.play()
         advanceTimeMillis(20000)
         val extraEvents = List(7) { ReplayEventGetStatus(it.toDouble()) }
         replayHistoryPlayer.pushEvents(extraEvents)
@@ -155,14 +148,14 @@ class ReplayHistoryPlayerTest {
                 ReplayEventGetStatus(1003.000)
             ))
         val timeCapture = mutableListOf<Long>()
-        replayHistoryPlayer.observeReplayEvents { replayEvents ->
+        replayHistoryPlayer.registerObserver { replayEvents ->
             if (replayEvents.isNotEmpty()) {
                 timeCapture.add(currentTime)
                 advanceTimeMillis(75)
             }
         }
 
-        val job = replayHistoryPlayer.play(lifecycleOwner)
+        val job = replayHistoryPlayer.play()
         for (i in 0..3000) {
             advanceTimeMillis(1)
         }
@@ -195,9 +188,9 @@ class ReplayHistoryPlayerTest {
                         bearing = null,
                         speed = null))
             ))
-        replayHistoryPlayer.observeReplayEvents(mockLambda)
+        replayHistoryPlayer.registerObserver(mockLambda)
 
-        val job = replayHistoryPlayer.play(lifecycleOwner)
+        val job = replayHistoryPlayer.play()
         advanceTimeMillis(5000)
         replayHistoryPlayer.finish()
         job.cancelAndJoin()
@@ -211,11 +204,11 @@ class ReplayHistoryPlayerTest {
         assertEquals(1580777613.89, events[1].eventTimestamp, 0.001)
     }
 
-    @Test(expected = Exception::class)
-    fun `should crash if history data is empty`() {
+    @Test
+    fun `should not crash if history data is empty`() {
         val replayHistoryPlayer = ReplayHistoryPlayer(logger)
 
-        replayHistoryPlayer.play(lifecycleOwner)
+        replayHistoryPlayer.play()
         replayHistoryPlayer.finish()
     }
 
@@ -235,7 +228,7 @@ class ReplayHistoryPlayerTest {
                         bearing = 243.31265258789063,
                         speed = 0.5585000514984131))
             ))
-        replayHistoryPlayer.observeReplayEvents(mockLambda)
+        replayHistoryPlayer.registerObserver(mockLambda)
 
         replayHistoryPlayer.playFirstLocation()
 
@@ -254,7 +247,7 @@ class ReplayHistoryPlayerTest {
                 ReplayEventGetStatus(1580777613.452),
                 ReplayEventGetStatus(1580777614.085)
             ))
-        replayHistoryPlayer.observeReplayEvents(mockLambda)
+        replayHistoryPlayer.registerObserver(mockLambda)
 
         replayHistoryPlayer.playFirstLocation()
 
@@ -270,10 +263,10 @@ class ReplayHistoryPlayerTest {
                 seekToEvent,
                 ReplayEventGetStatus(3.085)
             ))
-        replayHistoryPlayer.observeReplayEvents(mockLambda)
+        replayHistoryPlayer.registerObserver(mockLambda)
         replayHistoryPlayer.seekTo(seekToEvent)
 
-        val job = replayHistoryPlayer.play(lifecycleOwner)
+        val job = replayHistoryPlayer.play()
         advanceTimeMillis(5000)
         replayHistoryPlayer.finish()
         job.cancelAndJoin()
@@ -294,7 +287,7 @@ class ReplayHistoryPlayerTest {
                 ReplayEventGetStatus(1.853),
                 ReplayEventGetStatus(3.085)
             ))
-        replayHistoryPlayer.observeReplayEvents(mockLambda)
+        replayHistoryPlayer.registerObserver(mockLambda)
         replayHistoryPlayer.seekTo(seekToEvent)
     }
 
@@ -306,10 +299,10 @@ class ReplayHistoryPlayerTest {
                 ReplayEventGetStatus(2.0),
                 ReplayEventGetStatus(4.0)
             ))
-        replayHistoryPlayer.observeReplayEvents(mockLambda)
+        replayHistoryPlayer.registerObserver(mockLambda)
         replayHistoryPlayer.seekTo(1.0)
 
-        val job = replayHistoryPlayer.play(lifecycleOwner)
+        val job = replayHistoryPlayer.play()
         advanceTimeMillis(5000)
         replayHistoryPlayer.finish()
         job.cancelAndJoin()
@@ -330,10 +323,10 @@ class ReplayHistoryPlayerTest {
                 ReplayEventGetStatus(1580777613.452),
                 ReplayEventGetStatus(1580777614.085)
             ))
-        replayHistoryPlayer.observeReplayEvents(mockLambda)
+        replayHistoryPlayer.registerObserver(mockLambda)
         replayHistoryPlayer.seekTo(1.0)
 
-        val job = replayHistoryPlayer.play(lifecycleOwner)
+        val job = replayHistoryPlayer.play()
         advanceTimeMillis(5000)
         replayHistoryPlayer.finish()
         job.cancelAndJoin()
@@ -353,9 +346,9 @@ class ReplayHistoryPlayerTest {
             .pushEvents(testEvents)
 
         replayHistoryPlayer.playbackSpeed(1.0)
-        val job = replayHistoryPlayer.play(lifecycleOwner)
+        val job = replayHistoryPlayer.play()
         val timeCapture = mutableListOf<Pair<ReplayEventBase, Long>>()
-        replayHistoryPlayer.observeReplayEvents { replayEvents ->
+        replayHistoryPlayer.registerObserver { replayEvents ->
             replayEvents.forEach { timeCapture.add(Pair(it, currentTime)) }
         }
         advanceTimeMillis(3000)
@@ -372,9 +365,9 @@ class ReplayHistoryPlayerTest {
             .pushEvents(testEvents)
 
         replayHistoryPlayer.playbackSpeed(4.0)
-        val job = replayHistoryPlayer.play(lifecycleOwner)
+        val job = replayHistoryPlayer.play()
         val timeCapture = mutableListOf<Pair<ReplayEventBase, Long>>()
-        replayHistoryPlayer.observeReplayEvents { replayEvents ->
+        replayHistoryPlayer.registerObserver { replayEvents ->
             replayEvents.forEach { timeCapture.add(Pair(it, currentTime)) }
         }
         advanceTimeMillis(4000)
@@ -391,9 +384,9 @@ class ReplayHistoryPlayerTest {
             .pushEvents(testEvents)
 
         replayHistoryPlayer.playbackSpeed(0.25)
-        val job = replayHistoryPlayer.play(lifecycleOwner)
+        val job = replayHistoryPlayer.play()
         val timeCapture = mutableListOf<Pair<ReplayEventBase, Long>>()
-        replayHistoryPlayer.observeReplayEvents { replayEvents ->
+        replayHistoryPlayer.registerObserver { replayEvents ->
             replayEvents.forEach { timeCapture.add(Pair(it, currentTime)) }
         }
         advanceTimeMillis(40000)
@@ -410,9 +403,9 @@ class ReplayHistoryPlayerTest {
             .pushEvents(testEvents)
 
         replayHistoryPlayer.playbackSpeed(1.0)
-        val job = replayHistoryPlayer.play(lifecycleOwner)
+        val job = replayHistoryPlayer.play()
         val timeCapture = mutableListOf<Pair<ReplayEventBase, Long>>()
-        replayHistoryPlayer.observeReplayEvents { replayEvents ->
+        replayHistoryPlayer.registerObserver { replayEvents ->
             replayEvents.forEach { timeCapture.add(Pair(it, currentTime)) }
         }
         advanceTimeMillis(2000)
@@ -434,11 +427,11 @@ class ReplayHistoryPlayerTest {
         val replayHistoryPlayer = ReplayHistoryPlayer(logger)
             .pushEvents(testEvents)
         val timeCapture = mutableListOf<Pair<ReplayEventBase, Long>>()
-        replayHistoryPlayer.observeReplayEvents { replayEvents ->
+        replayHistoryPlayer.registerObserver { replayEvents ->
             replayEvents.forEach { timeCapture.add(Pair(it, currentTime)) }
         }
 
-        val job = replayHistoryPlayer.play(lifecycleOwner)
+        val job = replayHistoryPlayer.play()
         advanceTimeMillis(20000)
         replayHistoryPlayer.playbackSpeed(3.0)
         advanceTimeMillis(20000)
@@ -447,6 +440,62 @@ class ReplayHistoryPlayerTest {
 
         // 12 events at the beginning
         assertEquals(12, timeCapture.size)
+    }
+
+    @Test
+    fun `should register multiple observers`() = coroutineRule.runBlockingTest {
+        val replayHistoryPlayer = ReplayHistoryPlayer(logger)
+            .pushEvents(listOf(
+                ReplayEventGetStatus(1.0),
+                ReplayEventGetStatus(2.0),
+                ReplayEventGetStatus(3.0)
+            ))
+        val firstObserver: (List<ReplayEventBase>) -> Unit = mockk(relaxed = true)
+        val secondObserver: (List<ReplayEventBase>) -> Unit = mockk(relaxed = true)
+        replayHistoryPlayer.registerObserver(firstObserver)
+        replayHistoryPlayer.registerObserver(secondObserver)
+
+        val job = replayHistoryPlayer.play()
+        advanceTimeMillis(5000)
+        replayHistoryPlayer.finish()
+        job.cancelAndJoin()
+
+        val firstObserverEvents = mutableListOf<List<ReplayEventBase>>()
+        coVerify { firstObserver(capture(firstObserverEvents)) }
+        val secondObserverEvents = mutableListOf<List<ReplayEventBase>>()
+        coVerify { secondObserver(capture(secondObserverEvents)) }
+        val firstEvents = firstObserverEvents.flatten()
+        val secondEvents = secondObserverEvents.flatten()
+        assertEquals(3, firstEvents.size)
+        assertEquals(firstEvents, secondEvents)
+    }
+
+    @Test
+    fun `should unregister single observers`() = coroutineRule.runBlockingTest {
+        val replayHistoryPlayer = ReplayHistoryPlayer(logger)
+            .pushEvents(listOf(
+                ReplayEventGetStatus(1.0),
+                ReplayEventGetStatus(2.0),
+                ReplayEventGetStatus(3.0)
+            ))
+        val firstObserver: (List<ReplayEventBase>) -> Unit = mockk(relaxed = true)
+        val secondObserver: (List<ReplayEventBase>) -> Unit = mockk(relaxed = true)
+        replayHistoryPlayer.registerObserver(firstObserver)
+        replayHistoryPlayer.registerObserver(secondObserver)
+
+        val job = replayHistoryPlayer.play()
+        advanceTimeMillis(1000)
+        replayHistoryPlayer.unregisterObserver(firstObserver)
+        advanceTimeMillis(2000)
+        replayHistoryPlayer.finish()
+        job.cancelAndJoin()
+
+        val firstObserverEvents = mutableListOf<List<ReplayEventBase>>()
+        coVerify { firstObserver(capture(firstObserverEvents)) }
+        val secondObserverEvents = mutableListOf<List<ReplayEventBase>>()
+        coVerify { secondObserver(capture(secondObserverEvents)) }
+        assertEquals(2, firstObserverEvents.flatten().size)
+        assertEquals(3, secondObserverEvents.flatten().size)
     }
 
     /**
